@@ -4,4 +4,9 @@ export default class MaturityClient {
         return fetch('http://localhost:9080/sink/resources/teams')
             .then(res => res.json());
     }
+
+    retrieveTeamMaturities(teamId) {
+        return fetch(`http://localhost:9080/sink/resources/teams/${teamId}/maturities`)
+            .then(res => res.json());
+    }
 }

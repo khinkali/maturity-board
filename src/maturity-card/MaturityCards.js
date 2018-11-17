@@ -18,7 +18,7 @@ export default class MaturityCards extends HTMLElement {
     }
 
     initializeTeamMaturities(teamId) {
-        this.devOps = undefined;
+        this.teamMaturity = undefined;
         const maturityClient = new MaturityClient();
         const retrieveTeam = maturityClient.retrieveTeam(teamId);
         const retriveTeamMaturities = maturityClient.retrieveTeamMaturities(teamId);
@@ -30,6 +30,28 @@ export default class MaturityCards extends HTMLElement {
             });
     }
 
+    initializeDetailMaturity(teamId, maturityIdSeparator) {
+        const maturitiesPath = teamId.substring(maturityIdSeparator + 1, teamId.length);
+        const maturityId = maturitiesPath.substring('maturities/'.length, maturitiesPath.length);
+        teamId = teamId.substring(0, maturityIdSeparator);
+        if (!this.teamMaturity) {
+            const retrieveTeamMaturities = new MaturityClient().retrieveTeamMaturities(teamId);
+            const retrieveTeam = new MaturityClient().retrieveTeam(teamId);
+            Promise.all([retrieveTeam, retrieveTeamMaturities])
+                .then(([team, maturities]) => {
+                    this.team = team;
+                    let teamMaturity = maturities
+                        .filter(maturity => maturity.id === maturityId)[0];
+                    this.teamMaturity = teamMaturity;
+                    this.cards = teamMaturity.maturities;
+                    this.render();
+                });
+        } else {
+            this.cards = this.teamMaturity.maturities;
+            this.render();
+        }
+    }
+
     render() {
         this.innerHTML = `
         ${this.getTitle()}
@@ -39,17 +61,92 @@ export default class MaturityCards extends HTMLElement {
         const cards = this.querySelector('.cards');
         this.cards
             .forEach(card => {
-                const maturityCard = new MaturityCard();
-                maturityCard.setAttribute('title', card.name);
-                maturityCard.setAttribute('level', 2);
+                const maturityCard = new MaturityCard(card.name);
                 if (card.maturities) {
-                    this.devOps = card;
-                    maturityCard.onclick = _ => this.displayDevOpsMaturity(card);
+                    this.teamMaturity = card;
+                    maturityCard.level = 2;
+                    maturityCard.body = `
+                    <p>Maturity-Level: ${maturityCard.level}<p>
+                    <p>Minimum-Maturity: <i class="fas ${maturityCard.determineMinimumMaturity()}"></i></p>
+                    `;
+                    maturityCard.onclick = _ => this.displayDetailMaturity(card);
                 } else if (card.id) {
+                    maturityCard.level = 2;
+                    maturityCard.body = `
+                    <p>Maturity-Level: ${maturityCard.level}<p>
+                    <p>Minimum-Maturity: <i class="fas ${maturityCard.determineMinimumMaturity()}"></i></p>
+                    `;
                     maturityCard.onclick = _ => this.displayTeamMaturity(card);
+                } else {
+                    const maxLeadTimeInMs = card.maxLeadTime.maxLeadTimeInMs;
+                    const maxAllowedLeadTimeInMs = card.maxLeadTimeInMs;
+                    maturityCard.minimumMaturity = maxAllowedLeadTimeInMs >= maxLeadTimeInMs;
+                    maturityCard.body = `
+                    <p>Fullfiled: <i class="fas ${maturityCard.determineMinimumMaturity()}"></i></p>
+                    <p>Maximum allowed Lead Time: <br />
+                    ${this.prettyPrintTime(maxAllowedLeadTimeInMs)}</p>
+                    <p>Max Lead Time: ${this.prettyPrintTime(maxLeadTimeInMs)}</p>
+                    `;
                 }
                 cards.appendChild(maturityCard)
             });
+    }
+
+    prettyPrintTime(timeInMs) {
+        timeInMs = Math.trunc(timeInMs);
+        if (timeInMs < 1000) {
+            return `${timeInMs}ms`;
+        }
+        let seconds = Math.trunc(timeInMs / 1000);
+        const ms = Math.trunc(timeInMs % 1000);
+        if (seconds < 60) {
+            return `${seconds}s${this.getMs(ms)}`;
+        }
+        let min = Math.trunc(seconds / 60);
+        seconds = Math.trunc(seconds % 60);
+        if (min < 60) {
+            return `${min}min ${this.getSecond(seconds)}${this.getMs(ms)}`;
+        }
+        let h = Math.trunc(min / 60);
+        min = Math.trunc(min % 60);
+        if (h < 24) {
+            return `${h}h ${this.getMin(min)}${this.getSecond(seconds)}`;
+        }
+        let day = Math.trunc(h / 24);
+        h = Math.trunc(h % 24);
+        return `${day}d ${this.getH(h)}${this.getMin(min)}`;
+    }
+
+    getH(h) {
+        if (h === 0) {
+            return '';
+        } else {
+            return ` ${h}h`;
+        }
+    }
+
+    getMin(min) {
+        if (min === 0) {
+            return '';
+        } else {
+            return ` ${min}min`;
+        }
+    }
+
+    getSecond(seconds) {
+        if (seconds === 0) {
+            return '';
+        } else {
+            return ` ${seconds}s`;
+        }
+    }
+
+    getMs(ms) {
+        if (ms === 0) {
+            return '';
+        } else {
+            return ` ${ms}ms`;
+        }
     }
 
     getTitle() {
@@ -62,17 +159,17 @@ export default class MaturityCards extends HTMLElement {
         } else {
             return '';
         }
-        if (this.devOps) {
+        if (this.teamMaturity) {
             title += `
             <a href="#teams/${this.team.id}">
-                <h3>${this.devOps.name}</h3>
+                <h3>${this.teamMaturity.name}</h3>
             </a>`;
         }
         return title;
     }
 
-    displayDevOpsMaturity(maturities) {
-        window.location.hash = `#teams/${this.team.id}/maturities/devOps`;
+    displayDetailMaturity(detailMaturity) {
+        window.location.hash = `#teams/${this.team.id}/maturities/${detailMaturity.id}`;
     }
 
     displayTeamMaturity(team) {
@@ -92,11 +189,7 @@ export default class MaturityCards extends HTMLElement {
             this.initializeTeamMaturities(teamId);
             return;
         }
-        const maturityId = teamId.substring(maturityIdSeparator + 1, teamId.length);
-        teamId = teamId.substring(0, maturityIdSeparator);
-
-        this.cards = this.devOps.maturities;
-        this.render();
+        this.initializeDetailMaturity(teamId, maturityIdSeparator);
     }
 }
 

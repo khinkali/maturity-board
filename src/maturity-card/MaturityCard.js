@@ -1,37 +1,77 @@
 export default class MaturityCard extends HTMLElement {
 
+    constructor(title) {
+        super();
+        this.title = title;
+    }
+
     connectedCallback() {
-        const title = this.getAttribute('title');
-        const maturityLevel = Math.trunc(this.getAttribute('level'));
-        this.className = `card text-white ${this.determineBaseColor(maturityLevel)} mb-3`;
+        this.render();
+    }
+
+    render() {
+        this.className = `card text-white ${this.determineBaseColor()} mb-3`;
         this.innerHTML = `
         <style>
         maturity-card {
             width: 18em;
         }
         </style>
-        <div class="card-header">${title}</div>
+        <div class="card-header">${this.title}</div>
         <div class="card-body">
-            <p>Maturity-Level: ${maturityLevel} 
-            <p>
-            <p>Minimum-Maturity: <i class="fas ${this.determineMinimumMaturity(maturityLevel)}"></i></p>
+        ${this.cardBody}
         </div>
         `;
     }
 
-    determineMinimumMaturity(level) {
-        if (level > 2) {
-            return 'fa-check'
+    set level(level) {
+        this.maturityLevel = level;
+        this.render();
+    }
+
+    get level() {
+        return this.maturityLevel;
+    }
+
+    set minimumMaturity(minimum) {
+        this.minimum = minimum;
+        this.render();
+    }
+
+    get minimumMaturity() {
+        return this.minimum;
+    }
+
+    set body(cardBody) {
+        this.cardBody = cardBody;
+        this.render();
+    }
+
+    get body() {
+        return this.cardBody;
+    }
+
+    determineMinimumMaturity() {
+        if (this.level > 2) {
+            return 'fa-check';
+        } else if (this.level <= 2) {
+            return 'fa-times';
+        } else if (this.minimumMaturity) {
+            return 'fa-check';
         } else {
-            return 'fa-times'
+            return 'fa-times';
         }
     }
 
-    determineBaseColor(level) {
-        if (level > 2) {
+    determineBaseColor() {
+        if (this.level > 2) {
             return 'bg-success';
-        } else if (level === 2) {
+        } else if (this.level === 2) {
             return 'bg-warning';
+        } else if (this.level < 2) {
+            return 'bg-danger';
+        } else if (this.minimumMaturity) {
+            return 'bg-success';
         } else {
             return 'bg-danger';
         }

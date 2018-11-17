@@ -1,5 +1,6 @@
 import MaturityCard from './MaturityCard.js';
 import MaturityClient from './MaturityClient.js';
+import MaturityTable from '../maturity-table/MaturityTable.js';
 
 export default class MaturityCards extends HTMLElement {
 
@@ -10,6 +11,7 @@ export default class MaturityCards extends HTMLElement {
 
     initializeTeams() {
         this.team = undefined;
+        this.detailTable = undefined;
         new MaturityClient().retrieveTeams()
             .then(teams => {
                 this.cards = teams;
@@ -19,6 +21,7 @@ export default class MaturityCards extends HTMLElement {
 
     initializeTeamMaturities(teamId) {
         this.teamMaturity = undefined;
+        this.detailTable = undefined;
         const maturityClient = new MaturityClient();
         const retrieveTeam = maturityClient.retrieveTeam(teamId);
         const retriveTeamMaturities = maturityClient.retrieveTeamMaturities(teamId);
@@ -30,10 +33,29 @@ export default class MaturityCards extends HTMLElement {
             });
     }
 
-    initializeDetailMaturity(teamId, maturityIdSeparator) {
-        const maturitiesPath = teamId.substring(maturityIdSeparator + 1, teamId.length);
-        const maturityId = maturitiesPath.substring('maturities/'.length, maturitiesPath.length);
-        teamId = teamId.substring(0, maturityIdSeparator);
+    initializeDetailMaturityTable(teamId, maturityId, detailId) {
+        if (!this.detailTable) {
+            const retrieveTeamMaturities = new MaturityClient().retrieveTeamMaturities(teamId);
+            const retrieveTeam = new MaturityClient().retrieveTeam(teamId);
+            Promise.all([retrieveTeam, retrieveTeamMaturities])
+                .then(([team, maturities]) => {
+                    this.team = team;
+                    let teamMaturity = maturities
+                        .filter(maturity => maturity.id === maturityId)[0];
+                    this.teamMaturity = teamMaturity;
+                    this.cards = teamMaturity.maturities;
+                    this.detailTable = teamMaturity.maturities
+                        .filter(detail => detail.id === detailId)[0];
+                    this.render();
+                });
+        } else {
+            this.cards = this.teamMaturity.maturities;
+            this.render();
+        }
+    }
+
+    initializeDetailMaturity(teamId, maturityId) {
+        this.detailTable = undefined;
         if (!this.teamMaturity) {
             const retrieveTeamMaturities = new MaturityClient().retrieveTeamMaturities(teamId);
             const retrieveTeam = new MaturityClient().retrieveTeam(teamId);
@@ -58,7 +80,7 @@ export default class MaturityCards extends HTMLElement {
         <div class="cards">
         </div>
         `;
-        const cards = this.querySelector('.cards');
+        this.cardsDiv = this.querySelector('.cards');
         this.cards
             .forEach(card => {
                 const maturityCard = new MaturityCard(card.name);
@@ -70,13 +92,6 @@ export default class MaturityCards extends HTMLElement {
                     <p>Minimum-Maturity: <i class="fas ${maturityCard.determineMinimumMaturity()}"></i></p>
                     `;
                     maturityCard.onclick = _ => this.displayDetailMaturity(card);
-                } else if (card.id) {
-                    maturityCard.level = 2;
-                    maturityCard.body = `
-                    <p>Maturity-Level: ${maturityCard.level}<p>
-                    <p>Minimum-Maturity: <i class="fas ${maturityCard.determineMinimumMaturity()}"></i></p>
-                    `;
-                    maturityCard.onclick = _ => this.displayTeamMaturity(card);
                 } else if (card.maxLeadTimeInMs) {
                     const maxLeadTimeInMs = card.maxLeadTime.maxLeadTimeInMs;
                     const maxAllowedLeadTimeInMs = card.maxLeadTimeInMs;
@@ -99,9 +114,35 @@ export default class MaturityCards extends HTMLElement {
                     <p>Max Cycle Time: <br />
                     ${this.prettyPrintTime(maxCycleTimeInMs)}</p>
                     `;
+                } else if (card.minEfficiency) {
+                    const currentMinEfficiency = card.minEfficiencyService.minEfficiency;
+                    const minEfficiency = card.minEfficiency;
+                    maturityCard.minimumMaturity = currentMinEfficiency >= minEfficiency;
+                    maturityCard.body = `
+                    <p>Fullfiled: <i class="fas ${maturityCard.determineMinimumMaturity()}"></i></p>
+                    <p>Minimum Efficiency<br />
+                    ${Math.trunc(100 * currentMinEfficiency)}%</p>
+                    <p>Minimum allowed Efficiency<br />
+                    ${Math.trunc(100 * minEfficiency)}%</p>
+                    `;
+                    maturityCard.onclick = e => this.displayDetailMaturityTable(card);
+                } else {
+                    maturityCard.level = 2;
+                    maturityCard.body = `
+                    <p>Maturity-Level: ${maturityCard.level}<p>
+                    <p>Minimum-Maturity: <i class="fas ${maturityCard.determineMinimumMaturity()}"></i></p>
+                    `;
+                    maturityCard.onclick = _ => this.displayTeamMaturity(card);
                 }
-                cards.appendChild(maturityCard)
+                this.cardsDiv.appendChild(maturityCard)
             });
+        this.renderDetailTable();
+    }
+
+    renderDetailTable() {
+        if (this.detailTable) {
+            this.appendChild(new MaturityTable());
+        }
     }
 
     prettyPrintTime(timeInMs) {
@@ -180,12 +221,16 @@ export default class MaturityCards extends HTMLElement {
         return title;
     }
 
+    displayTeamMaturity(team) {
+        window.location.hash = `#teams/${team.id}`;
+    }
+
     displayDetailMaturity(detailMaturity) {
         window.location.hash = `#teams/${this.team.id}/maturities/${detailMaturity.id}`;
     }
 
-    displayTeamMaturity(team) {
-        window.location.hash = `#teams/${team.id}`;
+    displayDetailMaturityTable(detailMaturity) {
+        window.location.hash = `#teams/${this.team.id}/maturities/${this.teamMaturity.id}/details/${detailMaturity.id}`;
     }
 
     initialize() {
@@ -201,7 +246,18 @@ export default class MaturityCards extends HTMLElement {
             this.initializeTeamMaturities(teamId);
             return;
         }
-        this.initializeDetailMaturity(teamId, maturityIdSeparator);
+        const maturitiesPath = teamId.substring(maturityIdSeparator + 1, teamId.length);
+        let maturityId = maturitiesPath.substring('maturities/'.length, maturitiesPath.length);
+        teamId = teamId.substring(0, maturityIdSeparator);
+        const detailIdSeparator = maturityId.indexOf('/');
+        if (detailIdSeparator < 0) {
+            this.initializeDetailMaturity(teamId, maturityId);
+            return;
+        }
+        const detailsPath = maturityId.substring(detailIdSeparator + 1, maturityId.length);
+        const detailId = detailsPath.substring('details/'.length, detailsPath.length);
+        maturityId = maturityId.substring(0, detailIdSeparator);
+        this.initializeDetailMaturityTable(teamId, maturityId, detailId);
     }
 }
 

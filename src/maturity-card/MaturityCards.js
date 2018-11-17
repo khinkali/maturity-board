@@ -18,6 +18,7 @@ export default class MaturityCards extends HTMLElement {
                 const maturityCard = new MaturityCard();
                 maturityCard.setAttribute('title', team.name);
                 maturityCard.setAttribute('level', 2);
+                maturityCard.setAttribute('id', team.id);
                 this.appendChild(maturityCard)
             });
     }

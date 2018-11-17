@@ -17,27 +17,62 @@ export default class MaturityCards extends HTMLElement {
             });
     }
 
+    initializeTeamMaturities(teamId) {
+        this.devOps = undefined;
+        const maturityClient = new MaturityClient();
+        const retrieveTeam = maturityClient.retrieveTeam(teamId);
+        const retriveTeamMaturities = maturityClient.retrieveTeamMaturities(teamId);
+        Promise.all([retrieveTeam, retriveTeamMaturities])
+            .then(([team, maturities]) => {
+                this.team = team;
+                this.cards = maturities;
+                this.render();
+            });
+    }
+
     render() {
         this.innerHTML = `
-        <p id="cards-title"></p>
+        ${this.getTitle()}
         <div class="cards">
         </div>
         `;
         const cards = this.querySelector('.cards');
-        const cardsTitle = this.querySelector('#cards-title');
-        if (this.team) {
-            cardsTitle.innerHTML = `<a href="#"><h2>${this.team.name}</h2></a>`;
-        }
         this.cards
             .forEach(card => {
                 const maturityCard = new MaturityCard();
                 maturityCard.setAttribute('title', card.name);
                 maturityCard.setAttribute('level', 2);
-                if (card.id) {
+                if (card.maturities) {
+                    this.devOps = card;
+                    maturityCard.onclick = _ => this.displayDevOpsMaturity(card);
+                } else if (card.id) {
                     maturityCard.onclick = _ => this.displayTeamMaturity(card);
                 }
                 cards.appendChild(maturityCard)
             });
+    }
+
+    getTitle() {
+        let title;
+        if (this.team) {
+            title = `
+            <a href="#">
+                <h2>${this.team.name}</h2>
+            </a>`;
+        } else {
+            return '';
+        }
+        if (this.devOps) {
+            title += `
+            <a href="#teams/${this.team.id}">
+                <h3>${this.devOps.name}</h3>
+            </a>`;
+        }
+        return title;
+    }
+
+    displayDevOpsMaturity(maturities) {
+        window.location.hash = `#teams/${this.team.id}/maturities/devOps`;
     }
 
     displayTeamMaturity(team) {
@@ -51,16 +86,17 @@ export default class MaturityCards extends HTMLElement {
             this.initializeTeams();
             return;
         }
-        const teamId = hash.substring(teamIdSeparator + 1, hash.length);
-        const maturityClient = new MaturityClient();
-        const retrieveTeam = maturityClient.retrieveTeam(teamId);
-        const retriveTeamMaturities = maturityClient.retrieveTeamMaturities(teamId);
-        Promise.all([retrieveTeam, retriveTeamMaturities])
-            .then(([team, maturities]) => {
-                this.team = team;
-                this.cards = maturities;
-                this.render();
-            });
+        let teamId = hash.substring(teamIdSeparator + 1, hash.length);
+        const maturityIdSeparator = teamId.indexOf('/');
+        if (maturityIdSeparator < 0) {
+            this.initializeTeamMaturities(teamId);
+            return;
+        }
+        const maturityId = teamId.substring(maturityIdSeparator + 1, teamId.length);
+        teamId = teamId.substring(0, maturityIdSeparator);
+
+        this.cards = this.devOps.maturities;
+        this.render();
     }
 }
 

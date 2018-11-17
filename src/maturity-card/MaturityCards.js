@@ -77,7 +77,7 @@ export default class MaturityCards extends HTMLElement {
                     <p>Minimum-Maturity: <i class="fas ${maturityCard.determineMinimumMaturity()}"></i></p>
                     `;
                     maturityCard.onclick = _ => this.displayTeamMaturity(card);
-                } else {
+                } else if (card.maxLeadTimeInMs) {
                     const maxLeadTimeInMs = card.maxLeadTime.maxLeadTimeInMs;
                     const maxAllowedLeadTimeInMs = card.maxLeadTimeInMs;
                     maturityCard.minimumMaturity = maxAllowedLeadTimeInMs >= maxLeadTimeInMs;
@@ -85,7 +85,19 @@ export default class MaturityCards extends HTMLElement {
                     <p>Fullfiled: <i class="fas ${maturityCard.determineMinimumMaturity()}"></i></p>
                     <p>Maximum allowed Lead Time: <br />
                     ${this.prettyPrintTime(maxAllowedLeadTimeInMs)}</p>
-                    <p>Max Lead Time: ${this.prettyPrintTime(maxLeadTimeInMs)}</p>
+                    <p>Max Lead Time: <br />
+                    ${this.prettyPrintTime(maxLeadTimeInMs)}</p>
+                    `;
+                } else if (card.maxCycleTimeInMs) {
+                    const maxCycleTimeInMs = card.maxCycleTime.maxCycleTimeInMs;
+                    const maxAllowedCycleTimeInMs = card.maxCycleTimeInMs;
+                    maturityCard.minimumMaturity = maxAllowedCycleTimeInMs >= maxCycleTimeInMs;
+                    maturityCard.body = `
+                    <p>Fullfiled: <i class="fas ${maturityCard.determineMinimumMaturity()}"></i></p>
+                    <p>Maximum allowed Cycle Time: <br />
+                    ${this.prettyPrintTime(maxAllowedCycleTimeInMs)}</p>
+                    <p>Max Cycle Time: <br />
+                    ${this.prettyPrintTime(maxCycleTimeInMs)}</p>
                     `;
                 }
                 cards.appendChild(maturityCard)

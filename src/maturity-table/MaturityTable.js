@@ -1,36 +1,39 @@
 export default class MaturityTable extends HTMLElement {
 
+    constructor(minEfficiency, versions) {
+        super();
+        this.minEfficiency = minEfficiency;
+        this.versions = versions;
+    }
+
     connectedCallback() {
         this.innerHTML = `
         <table class="table table-hover table-dark">
           <thead>
             <tr>
-              <th scope="col">#</th>
-              <th scope="col">First</th>
-              <th scope="col">Last</th>
-              <th scope="col">Handle</th>
+              <th scope="col">Version</th>
+              <th scope="col">Cycle Time</th>
+              <th scope="col">Lead Time</th>
+              <th scope="col">Efficiency</th>
             </tr>
           </thead>
           <tbody>
-            <tr>
-              <th scope="row">1</th>
-              <td>Mark</td>
-              <td>Otto</td>
-              <td>@mdo</td>
-            </tr>
-            <tr>
-              <th scope="row">2</th>
-              <td>Jacob</td>
-              <td>Thornton</td>
-              <td>@fat</td>
-            </tr>
-            <tr>
-              <th scope="row">3</th>
-              <td colspan="2">Larry the Bird</td>
-              <td>@twitter</td>
-            </tr>
+          ${this.versions
+            .map(version => this.createRow(version))
+            .join('')}
           </tbody>
         </table>
+        `;
+    }
+
+    createRow(version) {
+        return `
+        <tr class="${(version.efficiency <= this.minEfficiency) ? 'bg-danger' : 'bg-success'}">
+          <th scope="row">${version.name}</th>
+          <td>${version.cycleTimeInMs}</td>
+          <td>${version.leadTimeInMs}</td>
+          <td>${version.efficiency}</td>
+        </tr>
         `;
     }
 }

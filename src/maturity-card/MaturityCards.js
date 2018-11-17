@@ -80,7 +80,7 @@ export default class MaturityCards extends HTMLElement {
         <div class="cards">
         </div>
         `;
-        this.cardsDiv = this.querySelector('.cards');
+        const cards = this.querySelector('.cards');
         this.cards
             .forEach(card => {
                 const maturityCard = new MaturityCard(card.name);
@@ -134,14 +134,14 @@ export default class MaturityCards extends HTMLElement {
                     `;
                     maturityCard.onclick = _ => this.displayTeamMaturity(card);
                 }
-                this.cardsDiv.appendChild(maturityCard)
+                cards.appendChild(maturityCard)
             });
         this.renderDetailTable();
     }
 
     renderDetailTable() {
         if (this.detailTable) {
-            this.appendChild(new MaturityTable());
+            this.appendChild(new MaturityTable(this.detailTable.minEfficiency, this.detailTable.minEfficiencyService.versions));
         }
     }
 
@@ -216,6 +216,12 @@ export default class MaturityCards extends HTMLElement {
             title += `
             <a href="#teams/${this.team.id}">
                 <h3>${this.teamMaturity.name}</h3>
+            </a>`;
+        }
+        if (this.detailTable) {
+            title += `
+            <a href="#teams/${this.team.id}/maturities/${this.teamMaturity.id}">
+                <h4>${this.detailTable.name}</h4>
             </a>`;
         }
         return title;

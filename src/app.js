@@ -1,1 +1,1 @@
-import './maturity-card/MaturityCards.js'
+import './maturity-cards/MaturityCards.js'

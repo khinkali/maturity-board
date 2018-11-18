@@ -1,6 +1,7 @@
-import MaturityCard from './MaturityCard.js';
 import MaturityClient from './MaturityClient.js';
 import MaturityTable from '../maturity-table/MaturityTable.js';
+import BasicMaturityCard from '../maturity-card/BasicMaturityCard.js';
+import DetailMaturityCard from '../maturity-card/DetailMaturityCard.js';
 
 export default class MaturityCards extends HTMLElement {
 
@@ -43,9 +44,9 @@ export default class MaturityCards extends HTMLElement {
                     let teamMaturity = maturities
                         .filter(maturity => maturity.id === maturityId)[0];
                     this.teamMaturity = teamMaturity;
-                    this.cards = teamMaturity.maturities;
-                    this.detailTable = teamMaturity.maturities
-                        .filter(detail => detail.id === detailId)[0];
+                    this.cards = teamMaturity.maturities
+                        .filter(detail => detail.id === detailId);
+                    this.detailTable = this.cards[0];
                     this.render();
                 });
         } else {
@@ -83,55 +84,48 @@ export default class MaturityCards extends HTMLElement {
         const cards = this.querySelector('.cards');
         this.cards
             .forEach(card => {
-                const maturityCard = new MaturityCard(card.name);
+                let maturityCard;
                 if (card.maturities) {
-                    this.teamMaturity = card;
-                    maturityCard.level = 2;
-                    maturityCard.body = `
-                    <p>Maturity-Level: ${maturityCard.level}<p>
-                    <p>Minimum-Maturity: <i class="fas ${maturityCard.determineMinimumMaturity()}"></i></p>
-                    `;
+                    maturityCard = new BasicMaturityCard(card.name, 2, 1);
                     maturityCard.onclick = _ => this.displayDetailMaturity(card);
                 } else if (card.maxLeadTimeInMs) {
                     const maxLeadTimeInMs = card.maxLeadTime.maxLeadTimeInMs;
                     const maxAllowedLeadTimeInMs = card.maxLeadTimeInMs;
-                    maturityCard.minimumMaturity = maxAllowedLeadTimeInMs >= maxLeadTimeInMs;
+                    maturityCard = new DetailMaturityCard(card.name, maxAllowedLeadTimeInMs >= maxLeadTimeInMs);
                     maturityCard.body = `
-                    <p>Fullfiled: <i class="fas ${maturityCard.determineMinimumMaturity()}"></i></p>
+                    <p>Fullfiled: <i class="fas ${(maturityCard.fullfiled) ? 'fa-ceck' : 'fa-times'}"></i></p>
                     <p>Maximum allowed Lead Time: <br />
                     ${this.prettyPrintTime(maxAllowedLeadTimeInMs)}</p>
                     <p>Max Lead Time: <br />
                     ${this.prettyPrintTime(maxLeadTimeInMs)}</p>
                     `;
+                    maturityCard.onclick = _ => this.displayDetailMaturityTable(card);
                 } else if (card.maxCycleTimeInMs) {
                     const maxCycleTimeInMs = card.maxCycleTime.maxCycleTimeInMs;
                     const maxAllowedCycleTimeInMs = card.maxCycleTimeInMs;
-                    maturityCard.minimumMaturity = maxAllowedCycleTimeInMs >= maxCycleTimeInMs;
+                    maturityCard = new DetailMaturityCard(card.name, maxAllowedCycleTimeInMs >= maxCycleTimeInMs);
                     maturityCard.body = `
-                    <p>Fullfiled: <i class="fas ${maturityCard.determineMinimumMaturity()}"></i></p>
+                    <p>Fullfiled: <i class="fas ${(maturityCard.fullfiled) ? 'fa-ceck' : 'fa-times'}"></i></p>
                     <p>Maximum allowed Cycle Time: <br />
                     ${this.prettyPrintTime(maxAllowedCycleTimeInMs)}</p>
                     <p>Max Cycle Time: <br />
                     ${this.prettyPrintTime(maxCycleTimeInMs)}</p>
                     `;
+                    maturityCard.onclick = _ => this.displayDetailMaturityTable(card);
                 } else if (card.minEfficiency) {
                     const currentMinEfficiency = card.minEfficiencyService.minEfficiency;
                     const minEfficiency = card.minEfficiency;
-                    maturityCard.minimumMaturity = currentMinEfficiency >= minEfficiency;
+                    maturityCard = new DetailMaturityCard(card.name, currentMinEfficiency >= minEfficiency);
                     maturityCard.body = `
-                    <p>Fullfiled: <i class="fas ${maturityCard.determineMinimumMaturity()}"></i></p>
+                    <p>Fullfiled: <i class="fas ${(maturityCard.fullfiled) ? 'fa-ceck' : 'fa-times'}"></i></p>
                     <p>Minimum Efficiency<br />
                     ${Math.trunc(100 * currentMinEfficiency)}%</p>
                     <p>Minimum allowed Efficiency<br />
                     ${Math.trunc(100 * minEfficiency)}%</p>
                     `;
-                    maturityCard.onclick = e => this.displayDetailMaturityTable(card);
+                    maturityCard.onclick = _ => this.displayDetailMaturityTable(card);
                 } else {
-                    maturityCard.level = 2;
-                    maturityCard.body = `
-                    <p>Maturity-Level: ${maturityCard.level}<p>
-                    <p>Minimum-Maturity: <i class="fas ${maturityCard.determineMinimumMaturity()}"></i></p>
-                    `;
+                    maturityCard = new BasicMaturityCard(card.name, 2);
                     maturityCard.onclick = _ => this.displayTeamMaturity(card);
                 }
                 cards.appendChild(maturityCard)

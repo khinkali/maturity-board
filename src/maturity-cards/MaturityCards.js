@@ -1,37 +1,21 @@
 import MaturityClient from './MaturityClient.js';
 import MaturityTable from '../maturity-table/MaturityTable.js';
-import BasicMaturityCard from '../maturity-card/BasicMaturityCard.js';
-import DetailMaturityCard from '../maturity-card/DetailMaturityCard.js';
+import TeamView from './TeamView.js';
+import BaseMaturitiesView from './BaseMaturitiesView.js';
+import TemporalPrettyPrinter from '../temporal-pretty-printer/TemporalPrettyPrinter.js';
+import DetailMaturityView from './DetailMaturityView.js';
 
 export default class MaturityCards extends HTMLElement {
+
+    constructor() {
+        super();
+        this.client = new MaturityClient();
+        this.prettyPrinter = new TemporalPrettyPrinter();
+    }
 
     connectedCallback() {
         window.onhashchange = _ => this.initialize();
         this.initialize();
-    }
-
-    initializeTeams() {
-        this.team = undefined;
-        this.detailTable = undefined;
-        new MaturityClient().retrieveTeams()
-            .then(teams => {
-                this.cards = teams;
-                this.render();
-            });
-    }
-
-    initializeTeamMaturities(teamId) {
-        this.teamMaturity = undefined;
-        this.detailTable = undefined;
-        const maturityClient = new MaturityClient();
-        const retrieveTeam = maturityClient.retrieveTeam(teamId);
-        const retriveTeamMaturities = maturityClient.retrieveTeamMaturities(teamId);
-        Promise.all([retrieveTeam, retriveTeamMaturities])
-            .then(([team, maturities]) => {
-                this.team = team;
-                this.cards = maturities;
-                this.render();
-            });
     }
 
     initializeDetailMaturityTable(teamId, maturityId, detailId) {
@@ -77,59 +61,13 @@ export default class MaturityCards extends HTMLElement {
 
     render() {
         this.innerHTML = `
-        ${this.getTitle()}
+        ${this.title}
         <div class="cards">
         </div>
         `;
         const cards = this.querySelector('.cards');
         this.cards
-            .forEach(card => {
-                let maturityCard;
-                if (card.maturities) {
-                    maturityCard = new BasicMaturityCard(card.name, 2, 1);
-                    maturityCard.onclick = _ => this.displayDetailMaturity(card);
-                } else if (card.maxLeadTimeInMs) {
-                    const maxLeadTimeInMs = card.maxLeadTime.maxLeadTimeInMs;
-                    const maxAllowedLeadTimeInMs = card.maxLeadTimeInMs;
-                    maturityCard = new DetailMaturityCard(card.name, maxAllowedLeadTimeInMs >= maxLeadTimeInMs);
-                    maturityCard.body = `
-                    <p>Fullfiled: <i class="fas ${(maturityCard.fullfiled) ? 'fa-ceck' : 'fa-times'}"></i></p>
-                    <p>Maximum allowed Lead Time: <br />
-                    ${this.prettyPrintTime(maxAllowedLeadTimeInMs)}</p>
-                    <p>Max Lead Time: <br />
-                    ${this.prettyPrintTime(maxLeadTimeInMs)}</p>
-                    `;
-                    maturityCard.onclick = _ => this.displayDetailMaturityTable(card);
-                } else if (card.maxCycleTimeInMs) {
-                    const maxCycleTimeInMs = card.maxCycleTime.maxCycleTimeInMs;
-                    const maxAllowedCycleTimeInMs = card.maxCycleTimeInMs;
-                    maturityCard = new DetailMaturityCard(card.name, maxAllowedCycleTimeInMs >= maxCycleTimeInMs);
-                    maturityCard.body = `
-                    <p>Fullfiled: <i class="fas ${(maturityCard.fullfiled) ? 'fa-ceck' : 'fa-times'}"></i></p>
-                    <p>Maximum allowed Cycle Time: <br />
-                    ${this.prettyPrintTime(maxAllowedCycleTimeInMs)}</p>
-                    <p>Max Cycle Time: <br />
-                    ${this.prettyPrintTime(maxCycleTimeInMs)}</p>
-                    `;
-                    maturityCard.onclick = _ => this.displayDetailMaturityTable(card);
-                } else if (card.minEfficiency) {
-                    const currentMinEfficiency = card.minEfficiencyService.minEfficiency;
-                    const minEfficiency = card.minEfficiency;
-                    maturityCard = new DetailMaturityCard(card.name, currentMinEfficiency >= minEfficiency);
-                    maturityCard.body = `
-                    <p>Fullfiled: <i class="fas ${(maturityCard.fullfiled) ? 'fa-ceck' : 'fa-times'}"></i></p>
-                    <p>Minimum Efficiency<br />
-                    ${Math.trunc(100 * currentMinEfficiency)}%</p>
-                    <p>Minimum allowed Efficiency<br />
-                    ${Math.trunc(100 * minEfficiency)}%</p>
-                    `;
-                    maturityCard.onclick = _ => this.displayDetailMaturityTable(card);
-                } else {
-                    maturityCard = new BasicMaturityCard(card.name, 2);
-                    maturityCard.onclick = _ => this.displayTeamMaturity(card);
-                }
-                cards.appendChild(maturityCard)
-            });
+            .forEach(card => cards.appendChild(card));
         this.renderDetailTable();
     }
 
@@ -139,78 +77,13 @@ export default class MaturityCards extends HTMLElement {
         }
     }
 
-    prettyPrintTime(timeInMs) {
-        timeInMs = Math.trunc(timeInMs);
-        if (timeInMs < 1000) {
-            return `${timeInMs}ms`;
-        }
-        let seconds = Math.trunc(timeInMs / 1000);
-        const ms = Math.trunc(timeInMs % 1000);
-        if (seconds < 60) {
-            return `${seconds}s${this.getMs(ms)}`;
-        }
-        let min = Math.trunc(seconds / 60);
-        seconds = Math.trunc(seconds % 60);
-        if (min < 60) {
-            return `${min}min ${this.getSecond(seconds)}${this.getMs(ms)}`;
-        }
-        let h = Math.trunc(min / 60);
-        min = Math.trunc(min % 60);
-        if (h < 24) {
-            return `${h}h ${this.getMin(min)}${this.getSecond(seconds)}`;
-        }
-        let day = Math.trunc(h / 24);
-        h = Math.trunc(h % 24);
-        return `${day}d ${this.getH(h)}${this.getMin(min)}`;
-    }
-
-    getH(h) {
-        if (h === 0) {
-            return '';
-        } else {
-            return ` ${h}h`;
-        }
-    }
-
-    getMin(min) {
-        if (min === 0) {
-            return '';
-        } else {
-            return ` ${min}min`;
-        }
-    }
-
-    getSecond(seconds) {
-        if (seconds === 0) {
-            return '';
-        } else {
-            return ` ${seconds}s`;
-        }
-    }
-
-    getMs(ms) {
-        if (ms === 0) {
-            return '';
-        } else {
-            return ` ${ms}ms`;
-        }
-    }
-
     getTitle() {
         let title;
         if (this.team) {
-            title = `
-            <a href="#">
-                <h2>${this.team.name}</h2>
-            </a>`;
         } else {
             return '';
         }
         if (this.teamMaturity) {
-            title += `
-            <a href="#teams/${this.team.id}">
-                <h3>${this.teamMaturity.name}</h3>
-            </a>`;
         }
         if (this.detailTable) {
             title += `
@@ -221,29 +94,34 @@ export default class MaturityCards extends HTMLElement {
         return title;
     }
 
-    displayTeamMaturity(team) {
-        window.location.hash = `#teams/${team.id}`;
-    }
-
-    displayDetailMaturity(detailMaturity) {
-        window.location.hash = `#teams/${this.team.id}/maturities/${detailMaturity.id}`;
-    }
-
-    displayDetailMaturityTable(detailMaturity) {
-        window.location.hash = `#teams/${this.team.id}/maturities/${this.teamMaturity.id}/details/${detailMaturity.id}`;
-    }
-
     initialize() {
         const hash = window.location.hash.substring(1);
         const teamIdSeparator = hash.indexOf('/');
         if (teamIdSeparator < 0) {
-            this.initializeTeams();
+            this.title = '';
+            new TeamView()
+                .retrieveTeams()
+                .then(cards => {
+                    this.cards = cards;
+                    this.render();
+                });
             return;
         }
         let teamId = hash.substring(teamIdSeparator + 1, hash.length);
         const maturityIdSeparator = teamId.indexOf('/');
         if (maturityIdSeparator < 0) {
-            this.initializeTeamMaturities(teamId);
+            const retrieveBaseMaturities = new BaseMaturitiesView()
+                .retrieveBaseMaturities(teamId);
+            const retrieveTeam = this.client.retrieveTeam(teamId);
+            Promise.all([retrieveTeam, retrieveBaseMaturities])
+                .then(([team, cards]) => {
+                    this.cards = cards;
+                    this.title = `
+                    <a href="#">
+                        <h2>${team.name}</h2>
+                    </a>`;
+                    this.render();
+                });
             return;
         }
         const maturitiesPath = teamId.substring(maturityIdSeparator + 1, teamId.length);
@@ -251,7 +129,21 @@ export default class MaturityCards extends HTMLElement {
         teamId = teamId.substring(0, maturityIdSeparator);
         const detailIdSeparator = maturityId.indexOf('/');
         if (detailIdSeparator < 0) {
-            this.initializeDetailMaturity(teamId, maturityId);
+            const retrieveDetailMaturities = new DetailMaturityView().retrieveDetailMaturities(teamId, maturityId);
+            const retrieveTeam = this.client.retrieveTeam(teamId);
+            const retrieveTeamMaturity = this.client.retrieveTeamMaturity(teamId, maturityId);
+            Promise.all([retrieveTeam, retrieveTeamMaturity, retrieveDetailMaturities])
+                .then(([team, maturity, cards]) => {
+                    this.title = `
+                    <a href="#">
+                        <h2>${team.name}</h2>
+                    </a>
+                    <a href="#teams/${team.id}">
+                        <h3>${maturity.name}</h3>
+                    </a>`;
+                    this.cards = cards;
+                    this.render();
+                });
             return;
         }
         const detailsPath = maturityId.substring(detailIdSeparator + 1, maturityId.length);

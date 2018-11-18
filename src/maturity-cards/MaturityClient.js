@@ -14,4 +14,11 @@ export default class MaturityClient {
         return fetch(`http://localhost:9080/sink/resources/teams/${teamId}/maturities`)
             .then(res => res.json());
     }
+
+    async retrieveTeamMaturity(teamId, maturityId) {
+        const maturities = await fetch(`http://localhost:9080/sink/resources/teams/${teamId}/maturities`)
+            .then(res => res.json());
+        return maturities
+            .filter(maturity => maturity.id === maturityId)[0];
+    }
 }

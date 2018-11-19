@@ -1,8 +1,10 @@
 import MaturityClient from './MaturityClient.js';
-import MaturityTable from '../maturity-table/MaturityTable.js';
 import TeamView from './TeamView.js';
 import BaseMaturitiesView from './BaseMaturitiesView.js';
 import DetailMaturityView from './DetailMaturityView.js';
+import MinEfficiencyTable from '../min-efficiency/MinEfficiencyTable.js';
+import MaxCycleTimeTable from '../max-cycle-time/MaxCycleTimeTable.js';
+import MaxLeadTimeTable from '../max-lead-time/MaxLeadTimeTable.js';
 
 export default class MaturityCards extends HTMLElement {
 
@@ -77,7 +79,13 @@ export default class MaturityCards extends HTMLElement {
         const retrieveTeamMaturity = this.client.retrieveTeamMaturity(teamId, teamMaturityId);
         Promise.all([retrieveTeam, retrieveTeamMaturity, retrieveDetailMaturity])
             .then(([team, teamMaturity, detailMaturity]) => {
-                this.cards = [new MaturityTable(detailMaturity.minEfficiency, detailMaturity.minEfficiencyService.versions)];
+                if (detailMaturity.id === 'minEfficiency') {
+                    this.cards = [new MinEfficiencyTable(detailMaturity.minEfficiencyService.versions, detailMaturity.minEfficiency)];
+                } else if (detailMaturity.id === 'maxCycleTime') {
+                    this.cards = [new MaxCycleTimeTable(detailMaturity.maxCycleTime.versions, detailMaturity.maxCycleTimeInMs)];
+                } else if (detailMaturity.id === 'maxLeadTime') {
+                    this.cards = [new MaxLeadTimeTable(detailMaturity.maxLeadTime.versions, detailMaturity.maxLeadTimeInMs)];
+                }
                 this.render(team, teamMaturity, detailMaturity);
             });
     }

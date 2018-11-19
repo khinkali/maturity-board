@@ -1,9 +1,11 @@
+import TemporalPrettyPrinter from '../temporal-pretty-printer/TemporalPrettyPrinter.js';
+
 export default class MaturityTable extends HTMLElement {
 
-    constructor(minEfficiency, versions) {
+    constructor(versions) {
         super();
-        this.minEfficiency = minEfficiency;
         this.versions = versions;
+        this.prettyPrinter = new TemporalPrettyPrinter();
     }
 
     connectedCallback() {
@@ -28,13 +30,17 @@ export default class MaturityTable extends HTMLElement {
 
     createRow(version) {
         return `
-        <tr class="${(version.efficiency <= this.minEfficiency) ? 'bg-danger' : 'bg-success'}">
+        <tr class="${this.getRowStyle(version)}">
           <th scope="row">${version.name}</th>
-          <td>${version.cycleTimeInMs}</td>
-          <td>${version.leadTimeInMs}</td>
-          <td>${version.efficiency}</td>
+          <td>${this.prettyPrinter.prettyPrintTime(version.cycleTimeInMs)}</td>
+          <td>${this.prettyPrinter.prettyPrintTime(version.leadTimeInMs)}</td>
+          <td>${this.prettyPrinter.prettyPrintTime(version.efficiency)}</td>
         </tr>
         `;
+    }
+
+    getRowStyle(version) {
+        return '';
     }
 }
 

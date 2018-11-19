@@ -13,7 +13,7 @@ export default class MaxCycleTimeCard {
         const maxAllowedCycleTimeInMs = this.maturity.maxCycleTimeInMs;
         const card = new DetailMaturityCard(this.maturity.name, maxAllowedCycleTimeInMs >= maxCycleTimeInMs);
         card.body = `
-            <p>Fullfiled: <i class="fas ${(card.fullfiled) ? 'fa-ceck' : 'fa-times'}"></i></p>
+            <p>Fullfiled: <i class="fas ${(card.fullfiled) ? 'fa-check' : 'fa-times'}"></i></p>
             <p>Maximum allowed Cycle Time: <br />
             ${this.prettyPrinter.prettyPrintTime(maxAllowedCycleTimeInMs)}</p>
             <p>Max Cycle Time: <br />

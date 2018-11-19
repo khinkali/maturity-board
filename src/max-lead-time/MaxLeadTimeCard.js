@@ -13,7 +13,7 @@ export default class MaxLeadTimeCard {
         const maxAllowedLeadTimeInMs = this.maturity.maxLeadTimeInMs;
         const card = new DetailMaturityCard(this.maturity.name, maxAllowedLeadTimeInMs >= maxLeadTimeInMs);
         card.body = `
-            <p>Fullfiled: <i class="fas ${(card.fullfiled) ? 'fa-ceck' : 'fa-times'}"></i></p>
+            <p>Fullfiled: <i class="fas ${(card.fullfiled) ? 'fa-check' : 'fa-times'}"></i></p>
             <p>Maximum allowed Lead Time: <br />
             ${this.prettyPrinter.prettyPrintTime(maxAllowedLeadTimeInMs)}</p>
             <p>Max Lead Time: <br />

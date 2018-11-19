@@ -11,7 +11,7 @@ export default class MinEfficiencyCard {
         const minEfficiency = this.maturity.minEfficiency;
         const card = new DetailMaturityCard(this.maturity.name, currentMinEfficiency >= minEfficiency);
         card.body = `
-            <p>Fullfiled: <i class="fas ${(this.maturity.fullfiled) ? 'fa-ceck' : 'fa-times'}"></i></p>
+            <p>Fullfiled: <i class="fas ${(this.maturity.fullfiled) ? 'fa-check' : 'fa-times'}"></i></p>
             <p>Minimum Efficiency<br />
             ${Math.trunc(100 * currentMinEfficiency)}%</p>
             <p>Minimum allowed Efficiency<br />

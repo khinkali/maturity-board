@@ -16,18 +16,31 @@ export default class MaturityCards extends HTMLElement {
         this.initialize();
     }
 
-    render() {
+    static get EVENTS() {
+        return {
+            VIEW_UPDATED: 'view-updated'
+        };
+    }
+
+    render(team, teamMaturity, detailMaturity) {
         this.innerHTML = `
-        ${this.title}
+        <bread-crumbs></bread-crumbs>
         <div class="cards">
         </div>
         `;
         const cards = this.querySelector('.cards');
         this.cards.forEach(card => cards.appendChild(card));
+        this.dispatchEvent(new CustomEvent(MaturityCards.EVENTS.VIEW_UPDATED, {
+            detail: {
+                team: team,
+                teamMaturity: teamMaturity,
+                detailMaturity: detailMaturity
+            },
+            bubbles: true
+        }));
     }
 
     initializeTeamsView() {
-        this.title = '';
         new TeamView()
             .retrieveTeams()
             .then(cards => {
@@ -43,11 +56,7 @@ export default class MaturityCards extends HTMLElement {
         Promise.all([retrieveTeam, retrieveBaseMaturities])
             .then(([team, cards]) => {
                 this.cards = cards;
-                this.title = `
-                    <a href="#">
-                        <h2>${team.name}</h2>
-                    </a>`;
-                this.render();
+                this.render(team);
             });
     }
 
@@ -56,16 +65,16 @@ export default class MaturityCards extends HTMLElement {
         const retrieveTeam = this.client.retrieveTeam(teamId);
         const retrieveTeamMaturity = this.client.retrieveTeamMaturity(teamId, teamMaturityId);
         Promise.all([retrieveTeam, retrieveTeamMaturity, retrieveDetailMaturities])
-            .then(([team, maturity, cards]) => {
+            .then(([team, teamMaturity, cards]) => {
                 this.title = `
                     <a href="#">
                         <h2>${team.name}</h2>
                     </a>
                     <a href="#teams/${team.id}">
-                        <h3>${maturity.name}</h3>
+                        <h3>${teamMaturity.name}</h3>
                     </a>`;
                 this.cards = cards;
-                this.render();
+                this.render(team, teamMaturity);
             });
     }
 
@@ -75,18 +84,8 @@ export default class MaturityCards extends HTMLElement {
         const retrieveTeamMaturity = this.client.retrieveTeamMaturity(teamId, teamMaturityId);
         Promise.all([retrieveTeam, retrieveTeamMaturity, retrieveDetailMaturity])
             .then(([team, teamMaturity, detailMaturity]) => {
-                this.title = `
-                    <a href="#">
-                        <h2>${team.name}</h2>
-                    </a>
-                    <a href="#teams/${team.id}">
-                        <h3>${teamMaturity.name}</h3>
-                    </a>
-                    <a href="#teams/${team.id}/maturities/${teamMaturity.id}">
-                        <h4>${detailMaturity.name}</h4>
-                    </a>`;
                 this.cards = [new MaturityTable(detailMaturity.minEfficiency, detailMaturity.minEfficiencyService.versions)];
-                this.render();
+                this.render(team, teamMaturity, detailMaturity);
             });
     }
 

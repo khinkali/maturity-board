@@ -2,7 +2,6 @@ import MaturityClient from './MaturityClient.js';
 import MaturityTable from '../maturity-table/MaturityTable.js';
 import TeamView from './TeamView.js';
 import BaseMaturitiesView from './BaseMaturitiesView.js';
-import TemporalPrettyPrinter from '../temporal-pretty-printer/TemporalPrettyPrinter.js';
 import DetailMaturityView from './DetailMaturityView.js';
 
 export default class MaturityCards extends HTMLElement {
@@ -10,53 +9,11 @@ export default class MaturityCards extends HTMLElement {
     constructor() {
         super();
         this.client = new MaturityClient();
-        this.prettyPrinter = new TemporalPrettyPrinter();
     }
 
     connectedCallback() {
         window.onhashchange = _ => this.initialize();
         this.initialize();
-    }
-
-    initializeDetailMaturityTable(teamId, maturityId, detailId) {
-        if (!this.detailTable) {
-            const retrieveTeamMaturities = new MaturityClient().retrieveTeamMaturities(teamId);
-            const retrieveTeam = new MaturityClient().retrieveTeam(teamId);
-            Promise.all([retrieveTeam, retrieveTeamMaturities])
-                .then(([team, maturities]) => {
-                    this.team = team;
-                    let teamMaturity = maturities
-                        .filter(maturity => maturity.id === maturityId)[0];
-                    this.teamMaturity = teamMaturity;
-                    this.cards = teamMaturity.maturities
-                        .filter(detail => detail.id === detailId);
-                    this.detailTable = this.cards[0];
-                    this.render();
-                });
-        } else {
-            this.cards = this.teamMaturity.maturities;
-            this.render();
-        }
-    }
-
-    initializeDetailMaturity(teamId, maturityId) {
-        this.detailTable = undefined;
-        if (!this.teamMaturity) {
-            const retrieveTeamMaturities = new MaturityClient().retrieveTeamMaturities(teamId);
-            const retrieveTeam = new MaturityClient().retrieveTeam(teamId);
-            Promise.all([retrieveTeam, retrieveTeamMaturities])
-                .then(([team, maturities]) => {
-                    this.team = team;
-                    let teamMaturity = maturities
-                        .filter(maturity => maturity.id === maturityId)[0];
-                    this.teamMaturity = teamMaturity;
-                    this.cards = teamMaturity.maturities;
-                    this.render();
-                });
-        } else {
-            this.cards = this.teamMaturity.maturities;
-            this.render();
-        }
     }
 
     render() {
@@ -66,32 +23,13 @@ export default class MaturityCards extends HTMLElement {
         </div>
         `;
         const cards = this.querySelector('.cards');
-        this.cards
-            .forEach(card => cards.appendChild(card));
-        this.renderDetailTable();
+        this.cards.forEach(card => cards.appendChild(card));
     }
 
     renderDetailTable() {
         if (this.detailTable) {
             this.appendChild(new MaturityTable(this.detailTable.minEfficiency, this.detailTable.minEfficiencyService.versions));
         }
-    }
-
-    getTitle() {
-        let title;
-        if (this.team) {
-        } else {
-            return '';
-        }
-        if (this.teamMaturity) {
-        }
-        if (this.detailTable) {
-            title += `
-            <a href="#teams/${this.team.id}/maturities/${this.teamMaturity.id}">
-                <h4>${this.detailTable.name}</h4>
-            </a>`;
-        }
-        return title;
     }
 
     initialize() {
@@ -149,7 +87,24 @@ export default class MaturityCards extends HTMLElement {
         const detailsPath = maturityId.substring(detailIdSeparator + 1, maturityId.length);
         const detailId = detailsPath.substring('details/'.length, detailsPath.length);
         maturityId = maturityId.substring(0, detailIdSeparator);
-        this.initializeDetailMaturityTable(teamId, maturityId, detailId);
+        const retrieveDetailMaturity = this.client.retrieveDetailMaturity(teamId, maturityId, detailId);
+        const retrieveTeam = this.client.retrieveTeam(teamId);
+        const retrieveTeamMaturity = this.client.retrieveTeamMaturity(teamId, maturityId);
+        Promise.all([retrieveTeam, retrieveTeamMaturity, retrieveDetailMaturity])
+            .then(([team, teamMaturity, detailMaturity]) => {
+                this.title = `
+                    <a href="#">
+                        <h2>${team.name}</h2>
+                    </a>
+                    <a href="#teams/${team.id}">
+                        <h3>${teamMaturity.name}</h3>
+                    </a>
+                    <a href="#teams/${team.id}/maturities/${teamMaturity.id}">
+                        <h4>${detailMaturity.name}</h4>
+                    </a>`;
+                this.cards = [new MaturityTable(detailMaturity.minEfficiency, detailMaturity.minEfficiencyService.versions)];
+                this.render();
+            });
     }
 }
 

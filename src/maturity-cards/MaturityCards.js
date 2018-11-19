@@ -66,13 +66,6 @@ export default class MaturityCards extends HTMLElement {
         const retrieveTeamMaturity = this.client.retrieveTeamMaturity(teamId, teamMaturityId);
         Promise.all([retrieveTeam, retrieveTeamMaturity, retrieveDetailMaturities])
             .then(([team, teamMaturity, cards]) => {
-                this.title = `
-                    <a href="#">
-                        <h2>${team.name}</h2>
-                    </a>
-                    <a href="#teams/${team.id}">
-                        <h3>${teamMaturity.name}</h3>
-                    </a>`;
                 this.cards = cards;
                 this.render(team, teamMaturity);
             });

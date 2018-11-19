@@ -1,5 +1,8 @@
-export default class TemporalPrettyPrinter {
+export default class PrettyPrinter {
 
+    prettyPrintPercent(percent) {
+        return `${Math.trunc(100 * percent)}%`;
+    }
     prettyPrintTime(timeInMs) {
         timeInMs = Math.trunc(timeInMs);
         if (timeInMs < 1000) {

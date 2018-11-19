@@ -1,9 +1,11 @@
 import DetailMaturityCard from '../maturity-card/DetailMaturityCard.js';
+import PrettyPrinter from '../temporal-pretty-printer/PrettyPrinter.js';
 
 export default class MinEfficiencyCard {
 
     constructor(maturity) {
         this.maturity = maturity;
+        this.prettyPrinter = new PrettyPrinter();
     }
 
     getCard() {
@@ -13,9 +15,9 @@ export default class MinEfficiencyCard {
         card.body = `
             <p>Fullfiled: <i class="fas ${(this.maturity.fullfiled) ? 'fa-check' : 'fa-times'}"></i></p>
             <p>Minimum Efficiency<br />
-            ${Math.trunc(100 * currentMinEfficiency)}%</p>
+            ${this.prettyPrinter.prettyPrintPercent( currentMinEfficiency)}</p>
             <p>Minimum allowed Efficiency<br />
-            ${Math.trunc(100 * minEfficiency)}%</p>
+            ${this.prettyPrinter.prettyPrintPercent( minEfficiency)}</p>
             `;
         return card;
     }

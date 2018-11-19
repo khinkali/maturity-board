@@ -1,11 +1,11 @@
-import TemporalPrettyPrinter from '../temporal-pretty-printer/TemporalPrettyPrinter.js';
+import PrettyPrinter from '../temporal-pretty-printer/PrettyPrinter.js';
 import DetailMaturityCard from '../maturity-card/DetailMaturityCard.js';
 
 export default class MaxLeadTimeCard {
 
     constructor(maturity) {
         this.maturity = maturity;
-        this.prettyPrinter = new TemporalPrettyPrinter();
+        this.prettyPrinter = new PrettyPrinter();
     }
 
     getCard() {

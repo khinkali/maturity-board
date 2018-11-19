@@ -1,11 +1,11 @@
-import TemporalPrettyPrinter from '../temporal-pretty-printer/TemporalPrettyPrinter.js';
+import PrettyPrinter from '../temporal-pretty-printer/PrettyPrinter.js';
 
 export default class MaturityTable extends HTMLElement {
 
     constructor(versions) {
         super();
         this.versions = versions;
-        this.prettyPrinter = new TemporalPrettyPrinter();
+        this.prettyPrinter = new PrettyPrinter();
     }
 
     connectedCallback() {
@@ -34,7 +34,7 @@ export default class MaturityTable extends HTMLElement {
           <th scope="row">${version.name}</th>
           <td>${this.prettyPrinter.prettyPrintTime(version.cycleTimeInMs)}</td>
           <td>${this.prettyPrinter.prettyPrintTime(version.leadTimeInMs)}</td>
-          <td>${this.prettyPrinter.prettyPrintTime(version.efficiency)}</td>
+          <td>${this.prettyPrinter.prettyPrintPercent(version.efficiency)}</td>
         </tr>
         `;
     }

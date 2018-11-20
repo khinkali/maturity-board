@@ -114,7 +114,13 @@ export default class MaturityCards extends HTMLElement {
         const detailsPath = maturityId.substring(detailIdSeparator + 1, maturityId.length);
         const detailId = detailsPath.substring('details/'.length, detailsPath.length);
         maturityId = maturityId.substring(0, detailIdSeparator);
-        this.initializeAdditionalInformation(teamId, maturityId, detailId);
+        const versionIdSeparator = detailId.indexOf('/');
+        if (versionIdSeparator < 0) {
+            this.initializeAdditionalInformation(teamId, maturityId, detailId);
+            return;
+        }
+        const versionPath = detailId.substring(versionIdSeparator + 1, detailId.length);
+        const versionId = versionPath.substring('/version'.length, versionPath.length);
     }
 }
 

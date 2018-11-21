@@ -9,7 +9,7 @@ export default class MaxCycleTimeCard {
     }
 
     getCard() {
-        const maxCycleTimeInMs = this.maturity.maxCycleTime.maxCycleTimeInMs;
+        const maxCycleTimeInMs = this.maturity.service.maxCycleTimeInMs;
         const maxAllowedCycleTimeInMs = this.maturity.maxCycleTimeInMs;
         const card = new DetailMaturityCard(this.maturity.name, maxAllowedCycleTimeInMs >= maxCycleTimeInMs);
         card.body = `

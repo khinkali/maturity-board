@@ -73,18 +73,18 @@ export default class MaturityCards extends HTMLElement {
             });
     }
 
-    initializeAdditionalInformation(teamId, teamMaturityId, detailId) {
+    initializeAdditionalInformation(teamId, teamMaturityId, detailId, versionId) {
         const retrieveDetailMaturity = this.client.retrieveDetailMaturity(teamId, teamMaturityId, detailId);
         const retrieveTeam = this.client.retrieveTeam(teamId);
         const retrieveTeamMaturity = this.client.retrieveTeamMaturity(teamId, teamMaturityId);
         Promise.all([retrieveTeam, retrieveTeamMaturity, retrieveDetailMaturity])
             .then(([team, teamMaturity, detailMaturity]) => {
                 if (detailMaturity.id === 'minEfficiency') {
-                    this.cards = [new MinEfficiencyTable(detailMaturity.minEfficiencyService.versions, detailMaturity.minEfficiency)];
+                    this.cards = [new MinEfficiencyTable(detailMaturity.service.versions, teamId, teamMaturityId, detailId, versionId, detailMaturity.minEfficiency)];
                 } else if (detailMaturity.id === 'maxCycleTime') {
-                    this.cards = [new MaxCycleTimeTable(detailMaturity.maxCycleTime.versions, detailMaturity.maxCycleTimeInMs)];
+                    this.cards = [new MaxCycleTimeTable(detailMaturity.service.versions, teamId, teamMaturityId, detailId, versionId, detailMaturity.maxCycleTimeInMs)];
                 } else if (detailMaturity.id === 'maxLeadTime') {
-                    this.cards = [new MaxLeadTimeTable(detailMaturity.maxLeadTime.versions, detailMaturity.maxLeadTimeInMs)];
+                    this.cards = [new MaxLeadTimeTable(detailMaturity.service.versions, teamId, teamMaturityId, detailId, versionId, detailMaturity.maxLeadTimeInMs)];
                 }
                 this.render(team, teamMaturity, detailMaturity);
             });
@@ -112,7 +112,7 @@ export default class MaturityCards extends HTMLElement {
             return;
         }
         const detailsPath = maturityId.substring(detailIdSeparator + 1, maturityId.length);
-        const detailId = detailsPath.substring('details/'.length, detailsPath.length);
+        let detailId = detailsPath.substring('details/'.length, detailsPath.length);
         maturityId = maturityId.substring(0, detailIdSeparator);
         const versionIdSeparator = detailId.indexOf('/');
         if (versionIdSeparator < 0) {
@@ -120,7 +120,9 @@ export default class MaturityCards extends HTMLElement {
             return;
         }
         const versionPath = detailId.substring(versionIdSeparator + 1, detailId.length);
-        const versionId = versionPath.substring('/version'.length, versionPath.length);
+        const versionId = versionPath.substring('versions/'.length, versionPath.length);
+        detailId = detailId.substring(0, versionIdSeparator);
+        this.initializeAdditionalInformation(teamId, maturityId, detailId, versionId);
     }
 }
 

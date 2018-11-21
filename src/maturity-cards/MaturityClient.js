@@ -28,4 +28,12 @@ export default class MaturityClient {
             .maturities
             .filter(maturity => maturity.id === detailId)[0];
     }
+
+    async retrieveVersionDetails(teamId, maturityId, detailId, versionId) {
+        const detail = await this.retrieveDetailMaturity(teamId, maturityId, detailId);
+        return detail
+            .service
+            .versions
+            .filter(version => version.name === versionId)[0];
+    }
 }

@@ -2,8 +2,8 @@ import MaturityTable from '../maturity-table/MaturityTable.js';
 
 export default class MaxLeadTimeTable extends MaturityTable{
 
-    constructor(versions, maxLeadTime) {
-        super(versions);
+    constructor(versions, teamId, teamMaturityId, detailId, maxLeadTime) {
+        super(versions, teamId, teamMaturityId, detailId);
         this.maxLeadTime = maxLeadTime;
     }
 

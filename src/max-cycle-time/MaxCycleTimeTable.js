@@ -2,8 +2,8 @@ import MaturityTable from '../maturity-table/MaturityTable.js';
 
 export default class MaxCycleTimeTable extends MaturityTable{
 
-    constructor(versions, maxCycleTime) {
-        super(versions);
+    constructor(versions, teamId, teamMaturityId, detailId, maxCycleTime) {
+        super(versions, teamId, teamMaturityId, detailId);
         this.maxCycleTime = maxCycleTime;
     }
 

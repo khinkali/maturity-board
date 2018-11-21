@@ -2,8 +2,8 @@ import MaturityTable from '../maturity-table/MaturityTable.js';
 
 export default class MinEfficiencyTable extends MaturityTable {
 
-    constructor(versions, minEfficiency) {
-        super(versions);
+    constructor(versions, teamId, teamMaturityId, detailId, versionId, minEfficiency) {
+        super(versions, teamId, teamMaturityId, detailId, versionId);
         this.minEfficiency = minEfficiency;
     }
 

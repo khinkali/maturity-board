@@ -9,7 +9,7 @@ export default class MaxLeadTimeCard {
     }
 
     getCard() {
-        const maxLeadTimeInMs = this.maturity.maxLeadTime.maxLeadTimeInMs;
+        const maxLeadTimeInMs = this.maturity.service.maxLeadTimeInMs;
         const maxAllowedLeadTimeInMs = this.maturity.maxLeadTimeInMs;
         const card = new DetailMaturityCard(this.maturity.name, maxAllowedLeadTimeInMs >= maxLeadTimeInMs);
         card.body = `

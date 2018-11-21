@@ -9,7 +9,7 @@ export default class MinEfficiencyCard {
     }
 
     getCard() {
-        const currentMinEfficiency = this.maturity.minEfficiencyService.minEfficiency;
+        const currentMinEfficiency = this.maturity.service.minEfficiency;
         const minEfficiency = this.maturity.minEfficiency;
         const card = new DetailMaturityCard(this.maturity.name, currentMinEfficiency >= minEfficiency);
         card.body = `

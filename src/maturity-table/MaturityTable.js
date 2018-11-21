@@ -1,4 +1,4 @@
-import PrettyPrinter from '../temporal-pretty-printer/PrettyPrinter.js';
+import PrettyPrinter from '../pretty-printer/PrettyPrinter.js';
 import {html, render} from '../libs/lit-html.js';
 import PipelineVisualisation from '../pipeline-visalisation/PipelineVisualisation.js';
 

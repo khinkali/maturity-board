@@ -1,4 +1,4 @@
-import PrettyPrinter from '../temporal-pretty-printer/PrettyPrinter.js';
+import PrettyPrinter from '../pretty-printer/PrettyPrinter.js';
 import DetailMaturityCard from '../maturity-card/DetailMaturityCard.js';
 
 export default class MaxLeadTimeCard {

@@ -1,5 +1,5 @@
 import DetailMaturityCard from '../maturity-card/DetailMaturityCard.js';
-import PrettyPrinter from '../temporal-pretty-printer/PrettyPrinter.js';
+import PrettyPrinter from '../pretty-printer/PrettyPrinter.js';
 
 export default class MaxCycleTimeCard {
 

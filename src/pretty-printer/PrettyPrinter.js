@@ -1,8 +1,13 @@
 export default class PrettyPrinter {
 
+    static get DATE_FORMAT() {
+        return 'yyyy-MM-DD HH:mm:ss:SSS';
+    }
+
     prettyPrintPercent(percent) {
         return `${Math.trunc(100 * percent)}%`;
     }
+
     prettyPrintTime(timeInMs) {
         timeInMs = Math.trunc(timeInMs);
         if (timeInMs < 1000) {

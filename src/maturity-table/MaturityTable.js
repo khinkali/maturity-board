@@ -52,7 +52,6 @@ export default class MaturityTable extends HTMLElement {
 
     onRowClick(version) {
         this.changeHash(this.teamId, this.baseMaturityId, this.detailId, version.name);
-        this.drawPipeline(version);
     }
 
     drawPipeline(version) {

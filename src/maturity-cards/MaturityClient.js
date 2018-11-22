@@ -1,23 +1,31 @@
 export default class MaturityClient {
 
-    retrieveTeams() {
-        return fetch('http://localhost:9080/sink/resources/teams')
+    async getBaseUrl() {
+        const baseUrl = await fetch('config/config.json')
+            .then(res => res.json())
+        return `${baseUrl.baseUrl}/sink/resources/teams`
+    }
+
+    async retrieveTeams() {
+        const baseUrl = await this.getBaseUrl();
+        return fetch(baseUrl)
             .then(res => res.json());
     }
 
-    retrieveTeam(teamId) {
-        return fetch(`http://localhost:9080/sink/resources/teams/${teamId}`)
+    async retrieveTeam(teamId) {
+        const baseUrl = await this.getBaseUrl();
+        return fetch(`${baseUrl}/${teamId}`)
             .then(res => res.json());
     }
 
-    retrieveTeamMaturities(teamId) {
-        return fetch(`http://localhost:9080/sink/resources/teams/${teamId}/maturities`)
+    async retrieveTeamMaturities(teamId) {
+        const baseUrl = await this.getBaseUrl();
+        return fetch(`${baseUrl}/${teamId}/maturities`)
             .then(res => res.json());
     }
 
     async retrieveTeamMaturity(teamId, maturityId) {
-        const maturities = await fetch(`http://localhost:9080/sink/resources/teams/${teamId}/maturities`)
-            .then(res => res.json());
+        const maturities = await this.retrieveTeamMaturities(teamId);
         return maturities
             .filter(maturity => maturity.id === maturityId)[0];
     }

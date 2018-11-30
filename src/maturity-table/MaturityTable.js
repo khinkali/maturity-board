@@ -1,6 +1,6 @@
 import PrettyPrinter from '../pretty-printer/PrettyPrinter.js';
 import {html, render} from '../libs/lit-html.js';
-import PipelineVisualisation from '../pipeline-visalisation/PipelineVisualisation.js';
+import PipelineVisualisation from '../pipeline-visualisation/PipelineVisualisation.js';
 import MaturityClient from '../maturity-cards/MaturityClient.js';
 
 export default class MaturityTable extends HTMLElement {
